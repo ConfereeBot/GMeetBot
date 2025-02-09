@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "docker-gmeetbot",
+      "type": "debugpy",
+      "request": "attach",
+      "preLaunchTask": "docker compose up gmeetbot",  // Запуск контейнера до отладки
+      "postDebugTask": "docker compose down gmeetbot",  // Остановка контейнера после завершения отладки
+      "justMyCode": true,
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ]
+    }
+  ]
+}
