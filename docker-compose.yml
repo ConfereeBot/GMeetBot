@@ -1,5 +1,5 @@
 services:
   bot:
-    image: meetsaver:latest
+    container_name: gmeet_bot
     build:
       context: .
