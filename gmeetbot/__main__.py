@@ -43,6 +43,7 @@ async def manage_task(message: aiormq.abc.DeliveredMessage):
             filepath = await GMeet().get_screenshot()
             with open(filepath, "rb") as file:
                 data = file.file()
+            os.remove(filepath)
             await answer_producer(message.channel, res.prepare(Req.SCREENSHOT, data))
         elif req_type == Req.TIME:
             await answer_producer(message.channel, res.prepare(Req.TIME, GMeet().recording_time))
