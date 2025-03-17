@@ -5,8 +5,8 @@ from time import time
 
 import nodriver as uc
 
-from .. import utils
 from . import exceptions as ex
+from . import utils
 
 logger = utils.logger.setup_logger(__name__)
 
