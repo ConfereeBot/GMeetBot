@@ -1,10 +1,13 @@
 import asyncio
 import json
 import os
+import threading
 
 import aiormq
 import nodriver as uc
 from aiormq.abc import AbstractChannel
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 
 import gmeetbot.responses as res
 
@@ -13,6 +16,22 @@ from .gmeet import GMeet
 from .responses import Req, Res
 
 logger = utils.logger.setup_logger(__name__)
+
+app = FastAPI()
+
+
+@app.get("/download/{filepath}")
+async def download(filepath: str):
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    response = FileResponse(
+        filepath,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f"attachment; filename={filepath}"},
+    )
+    os.remove(filepath)
+    return response
 
 
 async def run_task(message: aiormq.abc.DeliveredMessage):
@@ -24,12 +43,11 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
             await answer_producer(message.channel, res.prepare(Res.BUSY, link))
             return
         await answer_producer(message.channel, res.prepare(Res.STARTED, link))
-        await GMeet().record_meet(link)
+        filename = await GMeet().record_meet(link)
+        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, [link, filename]))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await answer_producer(message.channel, res.prepare(Res.ERROR, link))
-    else:
-        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link))
 
 
 async def manage_task(message: aiormq.abc.DeliveredMessage):
@@ -61,7 +79,7 @@ async def answer_producer(channel: AbstractChannel, res: bytes):
     )
 
 
-async def main():
+async def start_listener():
     print("Starting listening to queues...")
     connection = await aiormq.connect(os.getenv("AMQP"))
     async with connection as conn:
@@ -75,7 +93,18 @@ async def main():
     print("Stopped listening to queues.")
 
 
+def start_web():
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8080)
+
+
 if __name__ == "__main__":
+    logger.info("Start web server in detached thread.")
+    web_thread = threading.Thread(target=start_web)
+    web_thread.daemon = True
+    web_thread.start()
+
     logger.info("Start gmeet recorder module.")
-    uc.loop().run_until_complete(main())
+    uc.loop().run_until_complete(start_listener())
     logger.info("Finished gmeet recording.")

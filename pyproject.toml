@@ -10,6 +10,8 @@ package-mode = false
 python = "^3.13"
 nodriver = "^0.39"
 aiormq = "^6.8.1"
+fastapi = "^0.115.11"
+uvicorn = "^0.34.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.10.0"

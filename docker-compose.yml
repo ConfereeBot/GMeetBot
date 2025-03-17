@@ -1,5 +1,7 @@
 services:
   bot:
     container_name: gmeet_bot
+    ports:
+      - 12396:8080
     build:
       context: .

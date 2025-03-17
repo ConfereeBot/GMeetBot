@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import StreamReader, subprocess
-from os import getenv, remove, scandir
+from os import getenv, makedirs, remove, scandir
 from time import time
 
 import nodriver as uc
@@ -9,8 +9,6 @@ from . import exceptions as ex
 from . import utils
 
 logger = utils.logger.setup_logger(__name__)
-
-VIDEO = "output.mp4"
 
 
 def SCREENSHOT() -> str:
@@ -27,8 +25,8 @@ CMD_FFMPEG = 'ffmpeg -y -loglevel info -f x11grab -r 25 -i :0.0 \
     -f segment -segment_time 600 -reset_timestamps 1 \
     -force_key_frames "expr:gte(t,n_forced*600)" -segment_format mp4 output/output_%03d.mp4'
 
-CMD_CONCAT = f"ls output/*.mp4 | sed \"s|^output/|file '|;s|$|'|\" > output/list.txt \
-    && ffmpeg -y -f concat -i output/list.txt -c copy {VIDEO}"
+CMD_CONCAT = "ls output/*.mp4 | sed \"s|^output/|file '|;s|$|'|\" > output/list.txt \
+    && ffmpeg -y -f concat -i output/list.txt -c copy {video}"
 
 CMD_PULSE = "pulseaudio -D --system=false --exit-idle-time=-1 --disallow-exit --log-level=debug \
     && pactl load-module module-null-sink sink_name=virtual_sink \
@@ -83,7 +81,10 @@ class GMeet:
 
     async def __run_cmd(self, command, on_background=False):
         process = await asyncio.create_subprocess_shell(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=asyncio.subprocess.PIPE
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=asyncio.subprocess.PIPE,
         )
 
         async def read_stream(stream: StreamReader):
@@ -126,6 +127,7 @@ class GMeet:
 
     async def __run_recording(self):
         logger.info("Start recording...")
+        makedirs("output", exist_ok=True)
         self.__start_time = time()
         ffmpeg = await self.__run_cmd(CMD_FFMPEG, True)
         left_people = 0
@@ -178,8 +180,11 @@ class GMeet:
             await ffmpeg[0].stdin.drain()
             await asyncio.gather(ffmpeg[0].wait(), ffmpeg[1], ffmpeg[2])
             logger.info("Start concatination...")
-            await asyncio.wait_for(self.__run_cmd(CMD_CONCAT), timeout=TIMEOUT)
-            return VIDEO
+            filename = str(int(time())) + ".mp4"
+            await asyncio.wait_for(
+                self.__run_cmd(CMD_CONCAT.format(video=filename)), timeout=TIMEOUT
+            )
+            return filename
         except asyncio.TimeoutError:
             logger.error("Can't conact videos. Raise error.")
             raise ex.ModuleException("ffmpeg")
