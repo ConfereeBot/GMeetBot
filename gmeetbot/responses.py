@@ -14,4 +14,4 @@ class Req(StrEnum):
 
 
 def prepare(res: Res, body) -> bytes:
-    return str({"res": res, "body": body}).encode()
+    return str({"type": res.value, "body": body}).encode()

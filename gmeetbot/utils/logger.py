@@ -32,6 +32,7 @@ def setup_logger(logger_name):
     )
 
     # Custom
+    logging.getLogger("aiormq").setLevel(logging.INFO)
     logger = logging.getLogger(logger_name)
 
     return logger
