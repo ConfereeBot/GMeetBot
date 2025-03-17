@@ -6,7 +6,7 @@ import threading
 import aiormq
 import nodriver as uc
 from aiormq.abc import AbstractChannel
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 import gmeetbot.responses as res
@@ -20,18 +20,24 @@ logger = utils.logger.setup_logger(__name__)
 app = FastAPI()
 
 
+def remove_file(filepath: str):
+    try:
+        os.remove(filepath)
+    except Exception as e:
+        logger.error(f"Cannot remove file after uploading: {e}")
+
+
 @app.get("/download/{filepath}")
-async def download(filepath: str):
+async def download(filepath: str, background_tasks: BackgroundTasks):
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="File not found")
 
-    response = FileResponse(
+    background_tasks.add_task(remove_file, filepath)
+    return FileResponse(
         filepath,
         media_type="application/octet-stream",
         headers={"Content-Disposition": f"attachment; filename={filepath}"},
     )
-    os.remove(filepath)
-    return response
 
 
 async def run_task(message: aiormq.abc.DeliveredMessage):
