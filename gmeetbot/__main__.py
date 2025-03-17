@@ -19,11 +19,11 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
     link = message.body.decode()
     logger.info(f"Received run task: {link}")
     await message.channel.basic_ack(delivery_tag=message.delivery.delivery_tag)
-    await answer_producer(message.channel, res.prepare(Res.STARTED, link))
     try:
         if GMeet().is_running:
             await answer_producer(message.channel, res.prepare(Res.BUSY, link))
             return
+        await answer_producer(message.channel, res.prepare(Res.STARTED, link))
         await GMeet().record_meet(link)
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
