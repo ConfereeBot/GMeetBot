@@ -57,7 +57,7 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
 
 
 async def manage_task(message: aiormq.abc.DeliveredMessage):
-    body = message.body.decode()
+    body = message.body.decode().replace("'", '"')
     logger.info(f"Received manage task: {body}")
     await message.channel.basic_ack(delivery_tag=message.delivery.delivery_tag)
     try:
