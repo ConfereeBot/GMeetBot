@@ -50,7 +50,7 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
             return
         await answer_producer(message.channel, res.prepare(Res.STARTED, link))
         filename = await GMeet().record_meet(link)
-        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, [link, filename]))
+        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, filename))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await answer_producer(message.channel, res.prepare(Res.ERROR, link))
@@ -65,10 +65,7 @@ async def manage_task(message: aiormq.abc.DeliveredMessage):
         req_type = Req(msg.get("type"))
         if req_type == Req.SCREENSHOT:
             filepath = await GMeet().get_screenshot()
-            with open(filepath, "rb") as file:
-                data = file.read()
-            os.remove(filepath)
-            await answer_producer(message.channel, res.prepare(Req.SCREENSHOT, data))
+            await answer_producer(message.channel, res.prepare(Req.SCREENSHOT, filepath))
         elif req_type == Req.TIME:
             await answer_producer(message.channel, res.prepare(Req.TIME, GMeet().recording_time))
     except Exception as e:
