@@ -150,6 +150,11 @@ class GMeet:
         self.__start_time = 0
         return ffmpeg
 
+    async def stay_incognito(self):
+        email_field = await self.__meet_page.select("input[type=text]")
+        await email_field.send_keys("Внимательный слушатель")
+        await self.__browser.wait(2)
+
     async def record_meet(self, meet_link: str) -> str:
         if self.is_running:
             raise ex.AlreadyRunException()
@@ -158,9 +163,12 @@ class GMeet:
             await self.__run_pulse()
 
         await self.__setup_browser()
-        await self.__google_sign_in()
+        # await self.__google_sign_in()
         self.__meet_page = await self.__browser.get(meet_link)
         await self.__browser.wait(5)
+        # Insted of signing in
+        await self.stay_incognito()
+        # ---
         next_btn = await self.__meet_page.find("join now")
         await next_btn.mouse_click()
         await self.__browser.wait(5)
