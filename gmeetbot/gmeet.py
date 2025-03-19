@@ -20,7 +20,7 @@ SCREEN_HEIGHT = getenv("SCREEN_HEIGHT")
 
 CMD_FFMPEG = 'ffmpeg -y -loglevel info -f x11grab -r 25 -i :0.0 \
     -f pulse -i default -channels 2 \
-    -c:v libx264 -pix_fmt yuv420p -c:a aac \
+    -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac \
     -vsync -1 -af aresample=async=-1 \
     -f segment -segment_time 600 -reset_timestamps 1 \
     -force_key_frames "expr:gte(t,n_forced*600)" -segment_format mp4 output/output_%03d.mp4'

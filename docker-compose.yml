@@ -1,9 +1,10 @@
 services:
   bot:
     env_file:
-      - ~/.env.gmeet
+      - .env.gmeet
     container_name: gmeet_bot
     ports:
       - 12396:8080
+      - 12390:7900
     build:
       context: .
