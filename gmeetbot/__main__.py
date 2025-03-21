@@ -22,6 +22,8 @@ app = FastAPI()
 
 def remove_file(filepath: str):
     try:
+        if filepath.endswith(".mp4"):
+            return
         os.remove(filepath)
     except Exception as e:
         logger.error(f"Cannot remove file after uploading: {e}")
