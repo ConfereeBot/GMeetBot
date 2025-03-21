@@ -104,6 +104,12 @@ class GMeet:
     def is_running(self):
         return not (self.__browser is None)
 
+    @property
+    def meet_link(self):
+        if not self.meet_link:
+            return ""
+        return self.meet_link
+
     async def __run_pulse(self):
         logger.info("Running pulse...")
         try:
@@ -159,6 +165,9 @@ class GMeet:
         if self.is_running:
             raise ex.AlreadyRunException()
         logger.info(f"Recoring for link: {meet_link}")
+
+        self.meet_link = meet_link
+
         if not self.__is_pulse_ready:
             await self.__run_pulse()
 

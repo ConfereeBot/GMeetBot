@@ -41,19 +41,22 @@ async def download(filepath: str, background_tasks: BackgroundTasks):
 
 
 async def run_task(message: aiormq.abc.DeliveredMessage):
-    link = message.body.decode()
-    logger.info(f"Received run task: {link}")
+    body = message.body.decode().replace("'", '"')
+    logger.info(f"Received run task: {body}")
     await message.channel.basic_ack(delivery_tag=message.delivery.delivery_tag)
     try:
+        msg: dict = json.loads(body)
+        link = msg.get("body")
+        user_id = msg.get("user_id")
         if GMeet().is_running:
-            await answer_producer(message.channel, res.prepare(Res.BUSY, link))
+            await answer_producer(message.channel, res.prepare(Res.BUSY, link, user_id))
             return
-        await answer_producer(message.channel, res.prepare(Res.STARTED, link))
+        await answer_producer(message.channel, res.prepare(Res.STARTED, link, user_id))
         filename = await GMeet().record_meet(link)
-        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, filename))
+        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, user_id, filename))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        await answer_producer(message.channel, res.prepare(Res.ERROR, link))
+        await answer_producer(message.channel, res.prepare(Res.ERROR, body))
 
 
 async def manage_task(message: aiormq.abc.DeliveredMessage):
@@ -62,12 +65,19 @@ async def manage_task(message: aiormq.abc.DeliveredMessage):
     await message.channel.basic_ack(delivery_tag=message.delivery.delivery_tag)
     try:
         msg: dict = json.loads(body)
+        user_id = msg.get("user_id")
         req_type = Req(msg.get("type"))
         if req_type == Req.SCREENSHOT:
             filepath = await GMeet().get_screenshot()
-            await answer_producer(message.channel, res.prepare(Req.SCREENSHOT, filepath))
+            await answer_producer(
+                message.channel,
+                res.prepare(Req.SCREENSHOT, GMeet().meet_link, user_id, filepath),
+            )
         elif req_type == Req.TIME:
-            await answer_producer(message.channel, res.prepare(Req.TIME, GMeet().recording_time))
+            await answer_producer(
+                message.channel,
+                res.prepare(Req.TIME, GMeet().meet_link, user_id, GMeet().recording_time),
+            )
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await answer_producer(message.channel, res.prepare(Res.ERROR, body))
