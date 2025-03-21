@@ -173,7 +173,7 @@ class GMeet:
         await self.__setup_browser()
         # await self.__google_sign_in()
         self.__meet_page = await self.__browser.get(meet_link)
-        await self.__browser.wait(5)
+        await self.__browser.wait(TIMEOUT)
         # Insted of signing in
         await self.stay_incognito()
         # ---
