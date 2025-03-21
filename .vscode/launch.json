@@ -18,13 +18,6 @@
           "remoteRoot": "."
         }
       ]
-    },
-    {
-      "name": "Python Debugger: Module",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "gmeetbot",
-      "envFile": "${workspaceFolder}/.env"
-  }
+    }
   ]
 }
