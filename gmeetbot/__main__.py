@@ -31,7 +31,9 @@ def remove_file(filepath: str):
 
 @app.get("/download/{filepath}")
 async def download(filepath: str, background_tasks: BackgroundTasks):
-    if not os.path.exists(filepath):
+    if not os.path.exists(filepath) or not (
+        filepath.endswith(".png") or filepath.endswith(".mp4")
+    ):
         raise HTTPException(status_code=404, detail="File not found")
 
     background_tasks.add_task(remove_file, filepath)
