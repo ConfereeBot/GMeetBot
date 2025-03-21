@@ -47,13 +47,12 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
     try:
         msg: dict = json.loads(body)
         link = msg.get("body")
-        user_id = msg.get("user_id")
         if GMeet().is_running:
-            await answer_producer(message.channel, res.prepare(Res.BUSY, link, user_id))
+            await answer_producer(message.channel, res.prepare(Res.BUSY, link))
             return
-        await answer_producer(message.channel, res.prepare(Res.STARTED, link, user_id))
+        await answer_producer(message.channel, res.prepare(Res.STARTED, link))
         filename = await GMeet().record_meet(link)
-        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, user_id, filename))
+        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, filename))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await answer_producer(message.channel, res.prepare(Res.ERROR, body))
