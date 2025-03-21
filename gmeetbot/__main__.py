@@ -43,12 +43,10 @@ async def download(filepath: str, background_tasks: BackgroundTasks):
 
 
 async def run_task(message: aiormq.abc.DeliveredMessage):
-    body = message.body.decode().replace("'", '"')
-    logger.info(f"Received run task: {body}")
+    link = message.body.decode().replace("'", '"')
+    logger.info(f"Received run task: {link}")
     await message.channel.basic_ack(delivery_tag=message.delivery.delivery_tag)
     try:
-        msg: dict = json.loads(body)
-        link = msg.get("body")
         if GMeet().is_running:
             await answer_producer(message.channel, res.prepare(Res.BUSY, link))
             return
@@ -57,7 +55,7 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
         await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, filename))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        await answer_producer(message.channel, res.prepare(Res.ERROR, body))
+        await answer_producer(message.channel, res.prepare(Res.ERROR, link))
 
 
 async def manage_task(message: aiormq.abc.DeliveredMessage):
@@ -72,12 +70,12 @@ async def manage_task(message: aiormq.abc.DeliveredMessage):
             filepath = await GMeet().get_screenshot()
             await answer_producer(
                 message.channel,
-                res.prepare(Req.SCREENSHOT, GMeet().meet_link, user_id, filepath),
+                res.prepare(Req.SCREENSHOT, GMeet().get_link(), user_id, filepath),
             )
         elif req_type == Req.TIME:
             await answer_producer(
                 message.channel,
-                res.prepare(Req.TIME, GMeet().meet_link, user_id, GMeet().recording_time),
+                res.prepare(Req.TIME, GMeet().get_link(), user_id, GMeet().recording_time),
             )
     except Exception as e:
         logger.error(f"Unexpected error: {e}")

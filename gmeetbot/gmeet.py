@@ -104,8 +104,7 @@ class GMeet:
     def is_running(self):
         return not (self.__browser is None)
 
-    @property
-    def meet_link(self):
+    def get_link(self):
         if not self.meet_link:
             return ""
         return self.meet_link
