@@ -13,7 +13,7 @@ class Req(StrEnum):
     TIME = "time"
 
 
-def prepare(res: Res, body, user_id=-1, filepath="") -> bytes:
+def prepare(res: Res, body, user_id: int = -1, filepath: str = "") -> bytes:
     return str(
         {
             "type": res.value,

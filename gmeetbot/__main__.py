@@ -54,7 +54,7 @@ async def run_task(message: aiormq.abc.DeliveredMessage):
             return
         await answer_producer(message.channel, res.prepare(Res.STARTED, link))
         filename = await GMeet().record_meet(link)
-        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, filename))
+        await answer_producer(message.channel, res.prepare(Res.SUCCEDED, link, -1, filename))
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         await answer_producer(message.channel, res.prepare(Res.ERROR, link))
