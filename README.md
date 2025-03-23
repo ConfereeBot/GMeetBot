@@ -18,7 +18,7 @@ This project is a Dockerized Python application that emulates video and audio dr
 ## Endpoints
 In addation, it deploys web-server on FastApi in order to upload contents to a client. Photos are not stored, videos vice verse — stored in docker volume.
 - `/download/{filename}` — request for downloading contents
-
+- Use port `12390` for VNC, `12396` — for web-server
 
 ## 📩Message Format
 ### Request Format (Producer)
