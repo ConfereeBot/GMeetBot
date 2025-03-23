@@ -14,18 +14,13 @@ fastapi = "^0.115.11"
 uvicorn = "^0.34.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.10.0"
-isort = "^5.13.2"
-flake8 = "^7.1.1"
 pre-commit = "^4.0.1"
+ruff = "^0.11.2"
 
+[tool.ruff]
+line-length = 99
+lint.ignore = ["F403"]
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 99
-
-[tool.isort]
-profile = "black"
