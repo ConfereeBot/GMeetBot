@@ -18,7 +18,7 @@ def setup_logger(logger_name):
         return logging.getLogger(logger_name)
 
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         handlers=[
             RotatingFileHandler(
