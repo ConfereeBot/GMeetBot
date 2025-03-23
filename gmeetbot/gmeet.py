@@ -129,7 +129,9 @@ class GMeet:
         logger.info("Getting screenshot...")
         if not self.__meet_page:
             return None
-        return await self.__meet_page.save_screenshot(SCREENSHOT())
+        filepath = SCREENSHOT()
+        await self.__meet_page.save_screenshot("videos/" + filepath)
+        return filepath
 
     async def __run_recording(self):
         logger.info("Start recording...")
