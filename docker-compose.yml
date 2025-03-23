@@ -10,6 +10,7 @@ services:
       context: .
     volumes:
       - video_data:/app/videos
+      - ./logs:/app/logs
 
 volumes:
   video_data:

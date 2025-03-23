@@ -26,7 +26,7 @@ CMD_FFMPEG = 'ffmpeg -y -loglevel info -f x11grab -r 25 -i :0.0 \
     -force_key_frames "expr:gte(t,n_forced*600)" -segment_format mp4 output/output_%03d.mp4'
 
 CMD_CONCAT = "ls output/*.mp4 | sed \"s|^output/|file '|;s|$|'|\" > output/list.txt \
-    && ffmpeg -y -f concat -i output/list.txt -c copy {video}"
+    && ffmpeg -y -f concat -i output/list.txt -c copy videos/{video}"
 
 CMD_PULSE = "pulseaudio -D --system=false --exit-idle-time=-1 --disallow-exit --log-level=debug \
     && pactl load-module module-null-sink sink_name=virtual_sink \
@@ -53,6 +53,7 @@ class GMeet:
         self.__start_time = 0
         self.__browser: uc.Browser = None
         self.__meet_page: uc.Tab = None
+        self.__is_run = False
 
     async def __setup_browser(self):
         self.__browser = await uc.start(
@@ -102,7 +103,7 @@ class GMeet:
 
     @property
     def is_running(self):
-        return not (self.__browser is None)
+        return self.__browser is not None
 
     def get_link(self):
         if not self.meet_link:
@@ -137,7 +138,7 @@ class GMeet:
         ffmpeg = await self.__run_cmd(CMD_FFMPEG, True)
         left_people = 0
         attempts = 0
-        while self.recording_time < AWAIT_TIME or left_people >= MIN_PEOPLE:
+        while (self.recording_time < AWAIT_TIME or left_people >= MIN_PEOPLE) and self.__is_run:
             await asyncio.sleep(UPDATE_TIME)
             try:
                 element = await self.__meet_page.query_selector("div.uGOf1d")
@@ -155,8 +156,19 @@ class GMeet:
         self.__start_time = 0
         return ffmpeg
 
+    def stop_recording(self):
+        self.__is_run = False
+
     async def stay_incognito(self):
-        email_field = await self.__meet_page.select("input[type=text]")
+        try:
+            email_field = await self.__meet_page.select("input[type=text]", TIMEOUT)
+        except Exception as e:
+            logger.debug(e)
+            self.__browser.stop()
+            self.__browser = None
+            self.__meet_page = None
+            raise ex.GMeetException("Cannot find email_field")
+        await self.__browser.wait(5)
         await email_field.send_keys("Внимательный слушатель")
         await self.__browser.wait(2)
 
@@ -165,6 +177,7 @@ class GMeet:
             raise ex.AlreadyRunException()
         logger.info(f"Recoring for link: {meet_link}")
 
+        self.__is_run = True
         self.meet_link = meet_link
 
         if not self.__is_pulse_ready:
@@ -173,11 +186,12 @@ class GMeet:
         await self.__setup_browser()
         # await self.__google_sign_in()
         self.__meet_page = await self.__browser.get(meet_link)
-        await self.__browser.wait(TIMEOUT)
         # Insted of signing in
         await self.stay_incognito()
         # ---
         next_btn = await self.__meet_page.find("join now")
+        if not next_btn:
+            raise ex.GMeetException("Cannot find 'join now' button")
         await next_btn.mouse_click()
         await self.__browser.wait(5)
 
@@ -185,8 +199,11 @@ class GMeet:
         ffmpeg = await self.__run_recording()
 
         exit_btn = await self.__meet_page.find_element_by_text("leave call")
-        await exit_btn.mouse_click()
-        await self.__browser.wait(2)
+        if exit_btn:
+            await exit_btn.mouse_click()
+            await self.__browser.wait(2)
+        else:
+            logger.warning("Cannot find 'exit' button. Force exiting...")
         self.__browser.stop()
         self.__meet_page = None
         # return
