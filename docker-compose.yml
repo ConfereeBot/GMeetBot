@@ -8,3 +8,8 @@ services:
       - 12390:7900
     build:
       context: .
+    volumes:
+      - video_data:/app/videos
+
+volumes:
+  video_data:
