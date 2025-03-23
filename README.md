@@ -1,6 +1,16 @@
 # 🎥GMeetBot
-## Content
-[TOC]
+## Table of Contents
+- [🎥GMeetBot](#gmeetbot)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Endpoints](#endpoints)
+  - [📩Message Format](#message-format)
+    - [Request Format (Producer)](#request-format-producer)
+    - [Response Format (Consumer)](#response-format-consumer)
+  - [📡RabbitMQ Topics](#rabbitmq-topics)
+  - [🚀Usage](#usage)
+  - [🛠️Installing project in DEBUG mode](#️installing-project-in-debug-mode)
+  - [📦App deployment](#app-deployment)
 
 ## Overview
 This project is a Dockerized Python application that emulates video and audio drivers for recording purposes. It uses nodriver to launch Chrome and record Google Meet conferences. The application is managed via a RabbitMQ message broker.
